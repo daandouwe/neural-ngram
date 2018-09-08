@@ -63,8 +63,8 @@ def get_vector(word, vectordict, dim, logfile):
             vec = vectordict[word.lower()]
         # If word is can be split using characters like `-` and `&` then
         # we take the average embedding of those splits.
-        elif splits(word) is not None: # word can be split into parts
-            vec = np.zeros(dim) # accumulator
+        elif splits(word) is not None:  # word can be split into parts
+            vec = np.zeros(dim)  # accumulator
             parts = splits(word)
             for part in parts:
                 if part in vectordict:
@@ -72,7 +72,7 @@ def get_vector(word, vectordict, dim, logfile):
                 elif part.lower() in vectordict:
                     vec += vectordict[part.lower()]
                 else:
-                    pass # implicit zero vector for this part
+                    pass  # implicit zero vector for this part
             vec /= len(parts) # Average of the embeddings
         # Otherwise we assign a random vector.
         else:
@@ -87,7 +87,7 @@ def splits(word, chars=('-', '\/', ',', '.', '&', "'")):
     Returns the longest list of chunks given the characters, and returns None
     if the word cannot split with one of the characters.
     Example:
-        `worse-than-expected` returns [`worse`, `then`, `expected`]
+        `worse-than-expected` returns [`worse`, `than`, `expected`]
         `automobile` -> None
     """
     words = None

@@ -13,7 +13,7 @@ from tqdm import tqdm
 
 from data import Corpus
 from model import NeuralNgram
-from utils import UNK, SOS, SOS_CHAR, print_args, write_losses, list_hidden_dims
+from utils import UNK, SOS, UNK_CHAR, SOS_CHAR, print_args, write_losses, list_hidden_dims
 
 
 def batchify(data, batch_size):
@@ -180,8 +180,10 @@ if __name__ == '__main__':
 						help='dimensionality of the word embeddings')
 	parser.add_argument('--hidden-dims', type=str, default='100',
 						help='dimension of hidden layers as comma separated string')
-	parser.add_argument('--unk', type=str, default=UNK,
+	parser.add_argument('--unk-word', type=str, default=UNK,
 						help='UNK word if used')
+	parser.add_argument('--unk-char', type=str, default=UNK_CHAR,
+						help='UNK character if used')
 	parser.add_argument('--start-word', type=str, default=SOS,
 						help='start of sequence for word model')
 	parser.add_argument('--start-char', type=str, default=SOS_CHAR,

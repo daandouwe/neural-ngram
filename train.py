@@ -56,21 +56,18 @@ def main(args):
 	val_data = batchify(corpus.valid, args.batch_size)
 	test_data = batchify(corpus.test, args.batch_size)
 
-
 	# Logging
 	print_args(args)
 	print('Using cuda: {}'.format(cuda))
-	print('Size of training set: {:,} tokens'.format(np.prod(train_data.size())))
-	print('Size of validation set: {:,} tokens'.format(np.prod(val_data.size())))
-	print('Size of test set: {:,} tokens'.format(np.prod(test_data.size())))
+	print('Size of training set: {:,}'.format(np.prod(train_data.size())))
+	print('Size of validation set: {:,}'.format(np.prod(val_data.size())))
+	print('Size of test set: {:,}'.format(np.prod(test_data.size())))
 	print('Vocabulary size: {:,}'.format(corpus.vocab_size))
 	print('Example data:')
-	i2w = corpus.dictionary.i2w
-	for k in range(5):
-		x = map(lambda i: i2w[i], train_data[:args.order, k].numpy())
-		y = [i2w[train_data[args.order, k]]]
-		print(list(x), y)
-
+	for k in range(100, 107):
+		x = [corpus.dictionary.i2w[i] for i in train_data[0, k:args.order+k]]
+		y = [corpus.dictionary.i2w[train_data[0, k+args.order]]]
+		print(x, y)
 
 	# Initialize model
 	hidden_dims = list_hidden_dims(args.hidden_dims)
@@ -87,7 +84,6 @@ def main(args):
 		model.tie_weights()
 	if cuda:
 		model.cuda()
-
 
 	# Training
 	print('Training...')
@@ -123,7 +119,7 @@ def main(args):
 					t0 = time.time()
 
 				if step % args.save_every == 0:
-					modelpath = os.path.join(args.save_dir, 'model.latest.pt')
+					modelpath = os.path.join(args.save_dir, f'{args.name}.latest.pt')
 					with open(modelpath, 'wb') as f:
 						torch.save(model, f)
 
@@ -138,7 +134,7 @@ def main(args):
 			print('-' * 89)
 
 			if not best_val_loss or val_loss < best_val_loss:
-				modelpath = os.path.join(args.save_dir, 'model.best.pt')
+				modelpath = os.path.join(args.save_dir, f'{args.name}.best.pt')
 				with open(modelpath, 'wb') as f:
 					torch.save(model, f)
 				best_val_loss = val_loss

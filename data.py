@@ -21,8 +21,8 @@ class Dictionary(object):
 
 class Corpus(object):
     def __init__(self, path, chars=False):
-        path = path + '-raw' if chars else path
         ext = 'raw' if chars else 'tokens'
+        path = path + '-raw' if chars else path
         self.chars = chars
         self.dictionary = Dictionary()
         self.train = self.tokenize(os.path.join(path, f'wiki.train.{ext}'))

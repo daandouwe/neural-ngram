@@ -81,8 +81,10 @@ def main(args):
 	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
 	criterion = nn.CrossEntropyLoss()
 	if args.use_glove:
+		print('Loading GloVe vectors...')
 		model.load_glove(args.glove_dir, i2w=corpus.dictionary.i2w)
 	if args.tied:
+		print('Tying weights...')
 		model.tie_weights()
 	if cuda:
 		model.cuda()
@@ -124,9 +126,9 @@ def main(args):
 					t0 = time.time()
 
 				if step % args.save_every == 0:
-					with open(args.save_dir + '.latest.model', 'wb') as f:
+					modelpath = os.path.join(args.save_dir, 'model.latest.pt')
+					with open(modelpath, 'wb') as f:
 						torch.save(model, f)
-					# torch.save(model.state_dict(), args.save_dir + '.latest.dict')
 
 			print('Evaluating on validation set...')
 			val_loss = evaluate(val_data, model, criterion)
@@ -139,7 +141,8 @@ def main(args):
 			print('-' * 89)
 
 			if not best_val_loss or val_loss < best_val_loss:
-				with open(args.save_dir + '.best.model', 'wb') as f:
+				modelpath = os.path.join(args.save_dir, 'model.best.pt')
+				with open(modelpath, 'wb') as f:
 					torch.save(model, f)
 				best_val_loss = val_loss
 
@@ -170,7 +173,7 @@ if __name__ == '__main__':
 						help='directory for training data')
 	parser.add_argument('--log-dir', type=str, default='log',
 						help='directory to write out logs')
-	parser.add_argument('--save-dir', type=str, default='models/model',
+	parser.add_argument('--save-dir', type=str, default='models',
 						help='save directory for model')
 	parser.add_argument('--glove-dir', type=str, default='~/embeddings/glove',
 						help='directory with glove embeddings if --use-glove')
@@ -197,15 +200,15 @@ if __name__ == '__main__':
 
 
 	# Training args
-	parser.add_argument('--batch-size', type=int, default=128,
+	parser.add_argument('--batch-size', type=int, default=32,
 						help='size of the minibatch')
 	parser.add_argument('--lr', type=float, default=1e-3,
 						help='learning rate for optimizer')
 	parser.add_argument('--epochs', type=int, default=10,
 						help='number of epochs')
-	parser.add_argument('--print-every', type=int, default=10,
+	parser.add_argument('--print-every', type=int, default=1000,
 						help='how often to print during training progress')
-	parser.add_argument('--save-every', type=int, default=100,
+	parser.add_argument('--save-every', type=int, default=10000,
 						help='how often to save during training progress')
 
 	args = parser.parse_args()

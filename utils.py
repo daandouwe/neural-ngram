@@ -12,15 +12,15 @@ def write_losses(losses, logdir, name='losses'):
 	name = name + '.csv' if not name.endswith('.csv') else name
 	logpath = os.path.join(logdir, name)
 	with open(logpath, 'w') as f:
-		print('step,loss', file=f)
-		for i, loss in enumerate(losses):
-			print(','.join((str(i), str(loss))), file=f)
+		print('loss', file=f)
+		for loss in losses:
+			print(loss, file=f)
 
 
 def print_args(args):
 	"""Prints all entries in args variable."""
 	for key, value in vars(args).items():
-		print('{} : {}'.format(key, value))
+		print(f'{key} : {value}')
 	print()
 
 

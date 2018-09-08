@@ -21,11 +21,13 @@ class Dictionary(object):
 
 class Corpus(object):
     def __init__(self, path, chars=False):
+        path = path + '-raw' if chars else path
+        ext = 'raw' if chars else 'tokens'
         self.chars = chars
         self.dictionary = Dictionary()
-        self.train = self.tokenize(os.path.join(path, 'wiki.train.tokens'))
-        self.valid = self.tokenize(os.path.join(path, 'wiki.valid.tokens'))
-        self.test = self.tokenize(os.path.join(path, 'wiki.test.tokens'))
+        self.train = self.tokenize(os.path.join(path, f'wiki.train.{ext}'))
+        self.valid = self.tokenize(os.path.join(path, f'wiki.valid.{ext}'))
+        self.test = self.tokenize(os.path.join(path, f'wiki.test.{ext}'))
         self.vocab_size = len(self.dictionary.i2w)
 
     def get_data(self, path):
@@ -56,23 +58,5 @@ class Corpus(object):
             for word in words:
                 ids[token] = self.dictionary.w2i[word]
                 token += 1
-
-        # with open(path, 'r') as f:
-        #     tokens = 0
-        #     for line in f:
-        #         words = line.split() + [EOS]
-        #         tokens += len(words)
-        #         for word in words:
-        #             self.dictionary.add_word(word)
-        #
-        # Tokenize file content
-        # with open(path, 'r') as f:
-        #     ids = torch.LongTensor(tokens)
-        #     token = 0
-        #     for line in f:
-        #         words = line.split() + [EOS]
-        #         for word in words:
-        #             ids[token] = self.dictionary.w2i[word]
-        #             token += 1
 
         return ids

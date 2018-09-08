@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import os
 import argparse
 import csv
@@ -111,13 +110,11 @@ def main(args):
 				loss.backward()
 				optimizer.step()
 
-				# Bookkeeping
-				np_loss = loss.data.numpy()[0]
-				losses.append(np_loss)
+				# Save loss.
+				losses.append(loss.data.numpy()[0])
 
 				if step % args.print_every == 0:
-					ls = losses[-args.print_every:]
-					avg_loss = sum(ls) / args.print_every
+					avg_loss = sum(losses[-args.print_every:]) / args.print_every
 					t1 = time.time()
 					print('| epoch {} | step {}/{} | loss {:.3f} | '
 							'ngram/s {:.1f}'.format(

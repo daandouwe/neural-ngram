@@ -80,6 +80,10 @@ def main(args):
 	optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
 	criterion = nn.CrossEntropyLoss()
+	if args.use_glove:
+		model.load_glove(args.glove_dir, i2w=corpus.dictionary.i2w)
+	if args.tied:
+		model.tie_weights()
 	if cuda:
 		model.cuda()
 
@@ -158,7 +162,8 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
 	# Positional args
-	parser.add_argument('name', type=str, help="Name of the model, e.g. 'ted-raw'")
+	parser.add_argument('name', type=str,
+						help="Name of the model, e.g. 'wiki-char'")
 
 	# Directory args
 	parser.add_argument('--data-dir', type=str, default='~/data/wikitext/wikitext-2',
@@ -167,6 +172,8 @@ if __name__ == '__main__':
 						help='directory to write out logs')
 	parser.add_argument('--save-dir', type=str, default='models/model',
 						help='save directory for model')
+	parser.add_argument('--glove-dir', type=str, default='~/embeddings/glove',
+						help='directory with glove embeddings if --use-glove')
 
 	# Model args
 	parser.add_argument('--use-chars', action='store_true',
@@ -183,6 +190,11 @@ if __name__ == '__main__':
 						help='start of sequence for word model')
 	parser.add_argument('--start-char', type=str, default=SOS_CHAR,
 						help='start of sequence for character model')
+	parser.add_argument('--use-glove', action='store_true',
+						help='use pretrained glove word embeddings')
+	parser.add_argument('--tied', action='store_true',
+						help='tie the word embedding and softmax weights')
+
 
 	# Training args
 	parser.add_argument('--batch-size', type=int, default=128,

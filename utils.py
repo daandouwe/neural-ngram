@@ -14,7 +14,7 @@ def write_losses(losses, logdir, name='losses'):
 	with open(logpath, 'w') as f:
 		print('step,loss', file=f)
 		for i, loss in enumerate(losses):
-			print(','.join((i, loss)), file=f)
+			print(','.join((str(i), str(loss))), file=f)
 
 
 def print_args(args):
@@ -29,7 +29,3 @@ def list_hidden_dims(hidden_dims):
     assert isinstance(hidden_dims, str)
     if hidden_dims:
     	return [int(d) for d in hidden_dims.split(",")]
-
-
-def load_glove(glove_path, dictionary):
-	return None

@@ -4,6 +4,8 @@ import os
 UNK = '<unk>'
 SOS = '<sos>'
 EOS = '<eos>'
+
+UNK_CHAR = '_'
 SOS_CHAR = '~'
 EOS_CHAR = '~'
 

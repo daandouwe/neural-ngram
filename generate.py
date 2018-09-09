@@ -2,7 +2,7 @@ import torch
 from torch.autograd import Variable
 
 from data import Corpus
-from utils import SOS, EOS
+from utils import UNK, SOS, EOS, UNK_CHAR, SOS_CHAR, EOS_CHAR
 
 
 def generate(args):
@@ -18,27 +18,42 @@ def generate(args):
 
     corpus = Corpus(args.data_dir, chars=args.use_chars)
     ntokens = len(corpus.dictionary)
-    start = 'this story starts with the '
-    ids = [corpus.dictionary.w2i[w] for w in start.split()]
+    sos = SOS_CHAR if args.use_chars else SOS
+    eos = EOS_CHAR if args.use_chars else EOS
+    unk = UNK_CHAR if args.use_chars else UNK
+    if args.start:
+        start = list(args.start) if args.use_chars else args.start.split()
+        input = start = [word.lower() for word in start] if args.lower else start
+        if len(input) < model.order:
+            input = (model.order - len(input))*[sos] + input
+        elif len(input) > model.order:
+            input = input[-model.order:]
+    else:
+        start = input = [sos]*model.order
+    input = [word if word in corpus.dictionary.w2i else unk for word in input]
+    ids = [corpus.dictionary.w2i[word] for word in input]
     input = Variable(torch.LongTensor(ids).unsqueeze(0))
 
+    glue = '' if args.use_chars else ' '
     with open(args.outf, 'w') as outf:
-        outf.write(start)
-
+        if args.start:
+            outf.write(glue.join(start) + glue)
         for i in range(args.num_samples):
             output = model(input)
             word_weights = output.squeeze().div(args.temperature).exp().cpu()
+            if args.no_unk:
+                word_weights[corpus.dictionary.w2i[unk]] = 0
             word_idx = torch.multinomial(word_weights, 1)[0]
             word_idx = word_idx.data[0]
             word = corpus.dictionary.i2w[word_idx]
 
             ids.append(word_idx)
-            input = Variable(torch.LongTensor(ids[-args.order:]).unsqueeze(0))
+            input = Variable(torch.LongTensor(ids[-model.order:]).unsqueeze(0))
 
-            if word in (SOS, EOS):
+            if word in (sos, eos):
                 outf.write('\n')
             else:
-                outf.write(word + ' ')
+                outf.write(word + glue)
 
             if i % 100 == 0:
                 print('| Generated {}/{} words'.format(i, args.num_samples))

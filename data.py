@@ -20,9 +20,11 @@ class Dictionary(object):
 
 
 class Corpus(object):
-    def __init__(self, path, chars=False):
+    def __init__(self, path, headers=True, lower=False, chars=False):
         ext = 'raw' if chars else 'tokens'
         path = path + '-raw' if chars else path
+        self.headers = headers
+        self.lower = lower
         self.chars = chars
         self.dictionary = Dictionary()
         self.train = self.tokenize(os.path.join(path, f'wiki.train.{ext}'))
@@ -34,10 +36,13 @@ class Corpus(object):
             tokens = 0
             for line in f:
                 line = line.strip()
-                if self.chars:
+                if line.startswith('=') and not self.headers:
+                    words =  []
+                elif self.chars:
                     words = list(SOS_CHAR + line + EOS_CHAR)
                 else:
-                    words = [SOS] + line.split() + [EOS]
+                    words = [word.lower() for word in line.split()] if self.lower else line.split()
+                    words = [SOS] + words + [EOS]
                 yield words
 
     def tokenize(self, path):
@@ -48,14 +53,14 @@ class Corpus(object):
         for words in self.get_data(path):
             tokens += len(words)
             for word in words:
-                self.dictionary.add_word(word.lower())
+                self.dictionary.add_word(word)
 
         # Tokenize file content
         ids = torch.LongTensor(tokens)
         token = 0
         for words in self.get_data(path):
             for word in words:
-                ids[token] = self.dictionary.w2i[word.lower()]
+                ids[token] = self.dictionary.w2i[word]
                 token += 1
 
         return ids

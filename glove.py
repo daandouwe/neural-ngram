@@ -27,7 +27,7 @@ def load_glove(words, dim, dir, logfile):
         glove = dict()
         with open(path) as f:
             for line in f:
-                line = line.strip().split()
+                line = line.strip().split(' ')
                 word, vec = line[0], line[1:]
                 vec = np.array([float(val) for val in vec])
                 glove[word] = vec

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 import argparse
-import csv
 import time
 
 import torch
@@ -13,6 +12,7 @@ from tqdm import tqdm
 
 from data import Corpus
 from model import NeuralNgram
+from generate import generate
 from utils import UNK, SOS, UNK_CHAR, SOS_CHAR, print_args, write_losses, list_hidden_dims
 
 
@@ -37,24 +37,26 @@ def evaluate(data, model, criterion):
 	n_steps = data.size(0) - model.order - 1
 	for i in tqdm(range(n_steps)):
 		x, y = get_batch(data, i, model.order)
-		out = model.forward(x)
+		out = model(x)
 		loss = criterion(out, y)
-		total_loss += loss.data.numpy()[0]
+		total_loss += loss.data[0]
 	return total_loss / n_steps
 
 
-def main(args):
+def train(args):
 	cuda = torch.cuda.is_available()
 
 	# Set seed for reproducibility
-	torch.manual_seed(42)
-	np.random.seed(42)
+	torch.manual_seed(args.seed)
+	np.random.seed(args.seed)
 
 	data_dir = os.path.expanduser(args.data_dir)
 	corpus = Corpus(data_dir, chars=args.use_chars)
 	train_data = batchify(corpus.train, args.batch_size)
 	val_data = batchify(corpus.valid, args.batch_size)
 	test_data = batchify(corpus.test, args.batch_size)
+	if cuda:
+		train_data, val_data, test_data = train_data.cuda(), val_data.cuda(), test_data.cuda()
 
 	# Logging
 	print_args(args)
@@ -65,8 +67,8 @@ def main(args):
 	print('Vocabulary size: {:,}'.format(corpus.vocab_size))
 	print('Example data:')
 	for k in range(100, 107):
-		x = [corpus.dictionary.i2w[i] for i in train_data[0, k:args.order+k]]
-		y = [corpus.dictionary.i2w[train_data[0, k+args.order]]]
+		x = [corpus.dictionary.i2w[i] for i in train_data[k:args.order+k, 0]]
+		y = [corpus.dictionary.i2w[train_data[k+args.order, 0]]]
 		print(x, y)
 
 	# Initialize model
@@ -98,7 +100,7 @@ def main(args):
 				x, y = get_batch(train_data, step-1, args.order)
 
 				# Forward pass
-				logits = model.forward(x)
+				logits = model(x)
 				loss = criterion(logits, y)
 
 				# Update parameters
@@ -107,7 +109,7 @@ def main(args):
 				optimizer.step()
 
 				# Save loss.
-				losses.append(loss.data.numpy()[0])
+				losses.append(loss.cpu().data[0])
 
 				if step % args.print_every == 0:
 					avg_loss = sum(losses[-args.print_every:]) / args.print_every
@@ -157,12 +159,12 @@ def main(args):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
-	# Positional args
-	parser.add_argument('name', type=str,
-						help="Name of the model, e.g. 'wiki-char'")
+	parser.add_argument('mode', choices=['train', 'generate'])
 
-	# Directory args
-	parser.add_argument('--data-dir', type=str, default='~/data/wikitext/wikitext-2',
+	# Positional args
+	parser.add_argument('--name', type=str, default='wiki',
+						help="Name of the model, e.g. 'wiki-char'")
+	parser.add_argument('--data-dir', type=str, default='data/wikitext-2',
 						help='directory for training data')
 	parser.add_argument('--log-dir', type=str, default='log',
 						help='directory to write out logs')
@@ -176,7 +178,7 @@ if __name__ == '__main__':
 						help='make a character language model')
 	parser.add_argument('--order', type=int, default=5,
 						help='order of the language model')
-	parser.add_argument('--emb-dim', type=int, default=30,
+	parser.add_argument('--emb-dim', type=int, default=50,
 						help='dimensionality of the word embeddings')
 	parser.add_argument('--hidden-dims', type=str, default='100',
 						help='dimension of hidden layers as comma separated string')
@@ -193,7 +195,6 @@ if __name__ == '__main__':
 	parser.add_argument('--tied', action='store_true',
 						help='tie the word embedding and softmax weights')
 
-
 	# Training args
 	parser.add_argument('--batch-size', type=int, default=32,
 						help='size of the minibatch')
@@ -201,11 +202,26 @@ if __name__ == '__main__':
 						help='learning rate for optimizer')
 	parser.add_argument('--epochs', type=int, default=10,
 						help='number of epochs')
+	parser.add_argument('--seed', type=int, default=42,
+						help='random seed')
 	parser.add_argument('--print-every', type=int, default=1000,
 						help='how often to print during training progress')
 	parser.add_argument('--save-every', type=int, default=10000,
 						help='how often to save during training progress')
 
+	# Generation args
+	parser.add_argument('--checkpoint', type=str, default='models/wiki.latest.pt',
+	                    help='model checkpoint to use')
+	parser.add_argument('--outf', type=str, default='generated.txt',
+	                    help='output file for generated text')
+	parser.add_argument('--num-samples', type=int, default='1000',
+	                    help='number of words to generate')
+	parser.add_argument('--temperature', type=float, default=1.0,
+	                    help='temperature - higher will increase diversity')
+
 	args = parser.parse_args()
 
-	main(args)
+	if args.mode == 'train':
+		train(args)
+	if args.mode == 'generate':
+		generate(args)

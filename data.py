@@ -28,7 +28,6 @@ class Corpus(object):
         self.train = self.tokenize(os.path.join(path, f'wiki.train.{ext}'))
         self.valid = self.tokenize(os.path.join(path, f'wiki.valid.{ext}'))
         self.test = self.tokenize(os.path.join(path, f'wiki.test.{ext}'))
-        self.vocab_size = len(self.dictionary.i2w)
 
     def get_data(self, path):
         with open(path, 'r') as f:
@@ -49,14 +48,18 @@ class Corpus(object):
         for words in self.get_data(path):
             tokens += len(words)
             for word in words:
-                self.dictionary.add_word(word)
+                self.dictionary.add_word(word.lower())
 
         # Tokenize file content
         ids = torch.LongTensor(tokens)
         token = 0
         for words in self.get_data(path):
             for word in words:
-                ids[token] = self.dictionary.w2i[word]
+                ids[token] = self.dictionary.w2i[word.lower()]
                 token += 1
 
         return ids
+
+    @property
+    def vocab_size(self):
+        return len(self.dictionary.i2w)

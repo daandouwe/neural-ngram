@@ -23,6 +23,12 @@ If you have pretrained GloVe vectors, you can use those:
 ./main.py train --name wiki --use-glove --glove-dir path/to/glove --emb-dim 50
 ```
 
+Some other data arguments are:
+```bash
+--lower       # Lowercase all words in training data.
+--no-header   # Remove all headers: `=== History ===` etc.
+```
+
 ## Speed and accuracy
 With the following arguments one epoch takes around 45 minutes:
 ```bash
@@ -31,7 +37,26 @@ With the following arguments one epoch takes around 45 minutes:
 This reaches a test perplexity of 224.89.
 
 ## Generate text
-./main.py generate --
+To generate text, use:
+```bash
+./main.py generate --checkpoint path/to/saved/model
+```
+Only the `<eos>` is replaced with a newline. Other generation arguments are:
+```bash
+--temperature 0.9   # Temperature to manipulate distribution.
+--no-unk            # Do not generate unks, especially useful for low --temperature.
+--start             # Provide an optional start of the generated text (can be longer than order)
+--show-sos          # Do print <sos> tokens (otherwise not shown)
+```
+
+## Plot embeddings
+To visualize the trained embeddings of the model, use:
+```bash
+./main.py plot --checkpoint path/to/saved/model
+```
+This fits a 2D t-SNE plot with K-means cluster coloring of the 1000 most common words in the dataset. The requires [Bokeh](https://bokeh.pydata.org/en/latest/) for plotting and [scikit-learn](http://scikit-learn.org/stable/index.html) for t-SNE and K-means.
+
+See an example html [here](https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html). (Github does not render html files. To render, download and open, or use the link [http://htmlpreview.github.com/?https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html](http://htmlpreview.github.com/?https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html).)
 
 ## Requirements
 ```
@@ -39,10 +64,13 @@ python>=3.6
 torch==0.3.0.post4
 numpy
 tqdm
+bokeh
+scikit-learn
 ```
 
 ## TODO
 - [ ] Convert to torch4
-- [ ] Text generation by sampling.
+- [X] Text generation by sampling.
+- [ ] Plot embeddings with t-SNE
 - [ ] Perplexity for user input.
 - [ ] Softmax approximation.

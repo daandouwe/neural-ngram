@@ -37,6 +37,7 @@ With the following arguments one epoch takes around 45 minutes:
 This reaches a test perplexity of 224.89.
 
 The loss is acting kinda funny though...
+
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/log/losses.png)
 
 ## Generate text

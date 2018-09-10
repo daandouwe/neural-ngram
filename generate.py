@@ -1,8 +1,10 @@
+import os
+
 import torch
 from torch.autograd import Variable
 
 from data import Corpus
-from utils import UNK, SOS, EOS, UNK_CHAR, SOS_CHAR, EOS_CHAR
+from utils import UNK, SOS, EOS, UNK_CHAR, SOS_CHAR, EOS_CHAR, model_data_checks
 
 
 def generate(args):
@@ -16,11 +18,16 @@ def generate(args):
         model = torch.load(f)
     model.eval()
 
-    corpus = Corpus(args.data_dir, chars=args.use_chars)
-    ntokens = len(corpus.dictionary)
     sos = SOS_CHAR if args.use_chars else SOS
     eos = EOS_CHAR if args.use_chars else EOS
     unk = UNK_CHAR if args.use_chars else UNK
+
+    data_dir = os.path.expanduser(args.data_dir)
+    corpus = Corpus(data_dir, headers=args.no_headers, lower=args.lower, chars=args.use_chars)
+    ntokens = len(corpus.dictionary)
+
+    model_data_checks(model, corpus, args)
+
     if args.start:
         start = list(args.start) if args.use_chars else args.start.split()
         input = start = [word.lower() for word in start] if args.lower else start
@@ -33,6 +40,7 @@ def generate(args):
     input = [word if word in corpus.dictionary.w2i else unk for word in input]
     ids = [corpus.dictionary.w2i[word] for word in input]
     input = Variable(torch.LongTensor(ids).unsqueeze(0))
+
 
     glue = '' if args.use_chars else ' '
     with open(args.outf, 'w') as outf:

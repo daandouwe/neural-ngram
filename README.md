@@ -79,6 +79,6 @@ tqdm
 ## TODO
 - [ ] Convert to torch4
 - [X] Text generation by sampling.
-- [ ] Plot embeddings with t-SNE
+- [X] Plot embeddings with t-SNE
 - [ ] Perplexity for user input.
 - [ ] Softmax approximation.

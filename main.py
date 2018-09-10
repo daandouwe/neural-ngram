@@ -13,7 +13,8 @@ from tqdm import tqdm
 from data import Corpus
 from model import NeuralNgram
 from generate import generate
-from utils import UNK, SOS, UNK_CHAR, SOS_CHAR, print_args, write_losses, list_hidden_dims
+from plot import plot
+from utils import print_args, write_losses, list_hidden_dims, model_data_checks
 
 
 def batchify(data, batch_size):
@@ -61,9 +62,9 @@ def train(args):
 	# Logging
 	print_args(args)
 	print('Using cuda: {}'.format(cuda))
-	print('Size of training set: {:,}'.format(np.prod(train_data.size())))
-	print('Size of validation set: {:,}'.format(np.prod(val_data.size())))
-	print('Size of test set: {:,}'.format(np.prod(test_data.size())))
+	print('Size of training set: {:,} tokens'.format(np.prod(train_data.size())))
+	print('Size of validation set: {:,} tokens'.format(np.prod(val_data.size())))
+	print('Size of test set: {:,} tokens'.format(np.prod(test_data.size())))
 	print('Vocabulary size: {:,}'.format(corpus.vocab_size))
 	print('Example data:')
 	for k in range(100, 107):
@@ -71,15 +72,19 @@ def train(args):
 		y = [corpus.dictionary.i2w[train_data[k+args.order, 0]]]
 		print(x, y)
 
+	# Initialize model
 	if args.resume:
 		print(f'Resume training with model {args.checkpoint}...')
 		with open(args.checkpoint, 'rb') as f:
 			model = torch.load(f)
+		model_data_checks(model, corpus, args)
 	else:
-		# Initialize model
 		hidden_dims = list_hidden_dims(args.hidden_dims)
 		model = NeuralNgram(
-			order=args.order, emb_dim=args.emb_dim, vocab_size=corpus.vocab_size, hidden_dims=hidden_dims)
+			order=args.order,
+			emb_dim=args.emb_dim,
+			vocab_size=corpus.vocab_size,
+			hidden_dims=hidden_dims)
 		if args.use_glove:
 			print('Loading GloVe vectors...')
 			model.load_glove(args.glove_dir, i2w=corpus.dictionary.i2w)
@@ -88,6 +93,7 @@ def train(args):
 			model.tie_weights()
 		if cuda:
 			model.cuda()
+
 	parameters = [param for param in model.parameters() if param.requires_grad]
 	optimizer = torch.optim.Adam(parameters, lr=args.lr)
 	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
@@ -164,7 +170,7 @@ def train(args):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument('mode', choices=['train', 'generate'])
+	parser.add_argument('mode', choices=['train', 'generate', 'plot'])
 
 	# Dir args
 	parser.add_argument('--data-dir', type=str, default='data/wikitext-2',
@@ -183,14 +189,6 @@ if __name__ == '__main__':
 						help='lowercase all training data')
 	parser.add_argument('--no-headers', action='store_false',
 						help='remove headers from wikitext data')
-	parser.add_argument('--unk-word', type=str, default=UNK,
-						help='UNK word if used')
-	parser.add_argument('--unk-char', type=str, default=UNK_CHAR,
-						help='UNK character if used')
-	parser.add_argument('--start-word', type=str, default=SOS,
-						help='start of sequence for word model')
-	parser.add_argument('--start-char', type=str, default=SOS_CHAR,
-						help='start of sequence for character model')
 
 	# Model args
 	parser.add_argument('--name', type=str, default='wiki',
@@ -242,3 +240,5 @@ if __name__ == '__main__':
 		train(args)
 	if args.mode == 'generate':
 		generate(args)
+	if args.mode == 'plot':
+		plot(args)

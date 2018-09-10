@@ -31,3 +31,20 @@ def list_hidden_dims(hidden_dims):
     assert isinstance(hidden_dims, str)
     if hidden_dims:
     	return [int(d) for d in hidden_dims.split(",")]
+
+
+def model_data_checks(model, corpus, args):
+	"""Check if model and data are consistent given args.
+
+	Useful when loading a model. E.g. when resuming training,
+	for generation, and for plotting.
+	"""
+	embeddings = model.embedding.weight
+	ntokens = len(corpus.dictionary.w2i)
+	if args.use_glove:
+		assert not embeddings.requires_grad, 'embeddings were trained, while using glove.'
+	else:
+		assert embeddings.requires_grad, 'embeddings were not trained, while not using glove.'
+	message = 'inconsistent sizes ntokens {:,} and embeddings {:,}. Not using the same data arguments?'.format(
+		ntokens, embeddings.size(0))
+	assert ntokens == embeddings.size(0), message

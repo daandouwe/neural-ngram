@@ -30,12 +30,10 @@ Some other data arguments are:
 ```
 
 ## Speed and perplexity
-With the following arguments one epoch takes around 45 minutes:
+With the following arguments we reach a test perplexity of 224.89, and one epoch takes around 45 minutes:
 ```bash
 ./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 --batch-size 128 --epochs 10
 ```
-This reaches a test perplexity of 224.89.
-
 The loss is acting kinda funny though:
 
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/log/losses.png)

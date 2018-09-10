@@ -29,7 +29,7 @@ Some other data arguments are:
 --no-header   # Remove all headers such as `=== History ===`.
 ```
 
-## Speed and accuracy
+## Speed and perplexity
 With the following arguments one epoch takes around 45 minutes:
 ```bash
 ./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 --batch-size 128 --epochs 10

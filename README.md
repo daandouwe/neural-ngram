@@ -74,8 +74,6 @@ python>=3.6
 torch==0.3.0.post4
 numpy
 tqdm
-bokeh
-scikit-learn
 ```
 
 ## TODO

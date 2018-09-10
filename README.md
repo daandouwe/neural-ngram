@@ -51,7 +51,7 @@ Other generation arguments are:
 --no-sos            # Do not print <sos> tokens
 ```
 
-See some generated text in [generate.txt]()
+See some generated text in [generate.txt](https://github.com/daandouwe/neural-ngram/blob/master/generated.txt).
 
 ## Plot embeddings
 To visualize the trained embeddings of the model, use:

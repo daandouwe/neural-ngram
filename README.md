@@ -40,6 +40,8 @@ The loss is acting kinda funny though...
 
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/log/losses.png)
 
+Oh loss surfaces...
+
 ## Generate text
 To generate text, use:
 ```bash

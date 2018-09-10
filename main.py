@@ -233,6 +233,8 @@ if __name__ == '__main__':
 	                    help='temperature - higher will increase diversity')
 	parser.add_argument('--no-unk', action='store_true',
 						help='avoid generating unk')
+	parser.add_argument('--no-sos', action='store_true',
+						help='print sos and eos tokens')
 
 	args = parser.parse_args()
 

@@ -1,4 +1,4 @@
-# Neural Ngram language model
+# Neural ngram language model
 A PyTorch implementation of [A Neural Probabilistic Language Model](http://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf). Code for training and data-loading based on the PyTorch example [Word level language model](https://github.com/pytorch/examples/tree/master/word_language_model).
 
 ## Setup

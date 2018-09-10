@@ -26,7 +26,7 @@ If you have pretrained GloVe vectors, you can use those:
 Some other data arguments are:
 ```bash
 --lower       # Lowercase all words in training data.
---no-header   # Remove all headers: `=== History ===` etc.
+--no-header   # Remove all headers such as `=== History ===`.
 ```
 
 ## Speed and accuracy
@@ -41,13 +41,17 @@ To generate text, use:
 ```bash
 ./main.py generate --checkpoint path/to/saved/model
 ```
-Only the `<eos>` is replaced with a newline. Other generation arguments are:
+The `<eos>` token is replaced with a newline, and the rest is printed as is.
+
+Other generation arguments are:
 ```bash
 --temperature 0.9   # Temperature to manipulate distribution.
---no-unk            # Do not generate unks, especially useful for low --temperature.
 --start             # Provide an optional start of the generated text (can be longer than order)
---show-sos          # Do print <sos> tokens (otherwise not shown)
+--no-unk            # Do not generate unks, especially useful for low --temperature.
+--no-sos            # Do not print <sos> tokens
 ```
+
+See some generated text in [generate.txt]()
 
 ## Plot embeddings
 To visualize the trained embeddings of the model, use:

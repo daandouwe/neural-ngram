@@ -15,12 +15,12 @@ A word-level example:
 
 A character-level example:
 ```bash
-./main.py train --name wiki-char --use-char --order 12 --batch-size 1024
+./main.py train --name wiki-char --use-char --order 12 --emb-dim 20 --batch-size 1024
 ```
 
 If you have pretrained GloVe vectors, you can use those:
 ```bash
-./main.py train --name wiki --use-glove --glove-dir path/to/glove --emb-dim 50
+./main.py train --name wiki --use-glove --glove-dir your/glove/dir --emb-dim 50
 ```
 
 Some other data arguments are:

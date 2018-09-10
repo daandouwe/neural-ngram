@@ -57,8 +57,9 @@ def generate(args):
 
             ids.append(word_idx)
             input = Variable(torch.LongTensor(ids[-model.order:]).unsqueeze(0))
-
-            if word in (sos, eos):
+            if word is sos and args.no_sos:
+                continue
+            elif word is eos:
                 outf.write('\n')
             else:
                 outf.write(word + glue)

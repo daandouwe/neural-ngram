@@ -32,7 +32,8 @@ Some other data arguments are:
 ## Speed and perplexity
 With the following arguments one epoch takes around 45 minutes:
 ```bash
-./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 --batch-size 128 --epochs 10  # Test perplexity 224.89
+./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 \
+    --batch-size 128 --epochs 10  # Test perplexity 224.89
 ```
 The loss is acting kinda funny though:
 

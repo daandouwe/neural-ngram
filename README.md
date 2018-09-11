@@ -30,9 +30,9 @@ Some other data arguments are:
 ```
 
 ## Speed and perplexity
-With the following arguments we reach a test perplexity of 224.89, and one epoch takes around 45 minutes:
+With the following arguments one epoch takes around 45 minutes:
 ```bash
-./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 --batch-size 128 --epochs 10
+./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 --batch-size 128 --epochs 10  # Test perplexity 224.89
 ```
 The loss is acting kinda funny though:
 
@@ -64,7 +64,7 @@ To visualize the trained embeddings of the model, use:
 ```
 This fits a 2D t-SNE plot with K-means cluster coloring of the 1000 most common words in the dataset. The requires [Bokeh](https://bokeh.pydata.org/en/latest/) for plotting and [scikit-learn](http://scikit-learn.org/stable/index.html) for t-SNE and K-means.
 
-See an example html [here](https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html). (Github does not render html files. To render, download and open, or use the link [http://htmlpreview.github.com/?https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html](http://htmlpreview.github.com/?https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html).)
+See an example html [here](https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html). (Github does not render html files. To render, download and open, or use [this link](http://htmlpreview.github.com/?https://github.com/daandouwe/neural-ngram/blob/master/plots/wiki.tsne.html).)
 
 ## Requirements
 ```

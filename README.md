@@ -39,7 +39,7 @@ The loss is acting kinda funny though:
 
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/log/losses.png)
 
-O loss surfaces...
+Is there some strange dependency, e.g. in the optimizer?
 
 ## Generate text
 To generate text, use:

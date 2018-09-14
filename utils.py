@@ -48,3 +48,8 @@ def model_data_checks(model, corpus, args):
 	message = 'inconsistent sizes ntokens {:,} and embeddings {:,}. Not using the same data arguments?'.format(
 		ntokens, embeddings.size(0))
 	assert ntokens == embeddings.size(0), message
+
+
+def normalize(counter):
+	total = sum(counter.values())
+	return dict((key, count/total) for key, count in counter.items())

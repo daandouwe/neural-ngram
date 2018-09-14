@@ -2,6 +2,7 @@
 import os
 import argparse
 import time
+from collections import Counter
 
 import torch
 from torch.autograd import Variable
@@ -14,7 +15,8 @@ from data import Corpus
 from model import NeuralNgram
 from generate import generate
 from plot import plot
-from utils import print_args, write_losses, list_hidden_dims, model_data_checks
+from softmax import ApproximateLoss
+from utils import print_args, write_losses, list_hidden_dims, model_data_checks, normalize
 
 
 def batchify(data, batch_size):
@@ -97,7 +99,15 @@ def train(args):
 	parameters = [param for param in model.parameters() if param.requires_grad]
 	optimizer = torch.optim.Adam(parameters, lr=args.lr)
 	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
-	criterion = nn.CrossEntropyLoss()
+	if args.softmax_approx:
+		unigram = normalize(Counter(corpus.train.numpy()))
+		unigram = np.array([unigram[i] for i in range(len(unigram))])
+		criterion = ApproximateLoss(
+			vocab_size=len(unigram), method='importance', unigram=unigram)
+		criterion(None, None)
+		quit()
+	else:
+		criterion = nn.CrossEntropyLoss()
 
 	# Training
 	print('Training...')
@@ -211,6 +221,8 @@ if __name__ == '__main__':
 						help='learning rate for optimizer')
 	parser.add_argument('--epochs', type=int, default=10,
 						help='number of epochs')
+	parser.add_argument('--softmax-approx', action='store_true',
+						help='use softmax approximation (complementary sum sampling)')
 	parser.add_argument('--seed', type=int, default=42,
 						help='random seed')
 	parser.add_argument('--print-every', type=int, default=1000,

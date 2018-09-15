@@ -104,10 +104,10 @@ def train(args):
 		unigram = np.array([unigram[i] for i in range(len(unigram))])
 		criterion = ApproximateLoss(
 			vocab_size=len(unigram), method='importance', unigram=unigram)
-		criterion(None, None)
-		quit()
 	else:
 		criterion = nn.CrossEntropyLoss()
+
+	xe = nn.CrossEntropyLoss()
 
 	# Training
 	print('Training...')
@@ -127,6 +127,8 @@ def train(args):
 				# Forward pass
 				logits = model(x)
 				loss = criterion(logits, y)
+				# loss_ = xe(logits, y)
+				# print(loss.item(), loss_.item())
 
 				# Update parameters
 				optimizer.zero_grad()
@@ -134,12 +136,12 @@ def train(args):
 				optimizer.step()
 
 				# Save loss.
-				losses.append(loss.cpu().data[0])
+				losses.append(loss.cpu().item())
 
 				if step % args.print_every == 0:
 					avg_loss = sum(losses[-args.print_every:]) / args.print_every
 					t1 = time.time()
-					print('| epoch {} | step {}/{} | loss {:.3f} | ngram/s {:.1f}'.format(
+					print('| epoch {} | step {}/{} | loss {:.3f} | ngrams/sec {:.1f}'.format(
 						epoch, step, num_steps, avg_loss,
 						args.print_every * args.batch_size / (t1-t0)))
 					t0 = time.time()

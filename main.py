@@ -49,7 +49,7 @@ def evaluate(data, model, criterion):
 def train(args):
 	cuda = torch.cuda.is_available()
 
-	# Set seed for reproducibility
+	# Set seed for reproducibility.
 	torch.manual_seed(args.seed)
 	np.random.seed(args.seed)
 

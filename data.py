@@ -21,8 +21,11 @@ class Dictionary(object):
 
 class Corpus(object):
     def __init__(self, path, headers=True, lower=False, chars=False):
-        ext = 'raw' if chars else 'tokens'
-        path = path + '-raw' if chars else path
+        if path.endswith('-raw'):
+            ext = 'raw'
+        else:
+            ext = 'raw' if chars else 'tokens'
+            path = path + '-raw' if chars else path
         self.headers = headers
         self.lower = lower
         self.chars = chars
@@ -47,7 +50,7 @@ class Corpus(object):
 
     def tokenize(self, path):
         """Tokenizes a text file."""
-        assert os.path.exists(path)
+        assert os.path.exists(path), path
         # Add words to the dictionary
         tokens = 0
         for words in self.get_data(path):

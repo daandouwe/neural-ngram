@@ -100,14 +100,15 @@ def train(args):
 	optimizer = torch.optim.Adam(parameters, lr=args.lr)
 	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
 	if args.softmax_approx:
-		unigram = normalize(Counter(corpus.train.numpy()))
-		unigram = np.array([unigram[i] for i in range(len(unigram))])
+		if False:
+			unigram = normalize(Counter(corpus.train.numpy()))
+			unigram = np.array([unigram[i] for i in range(len(unigram))])
+		else:
+			unigram = None
 		criterion = ApproximateLoss(
-			vocab_size=len(unigram), method='importance', unigram=unigram)
+			vocab_size=len(corpus.dictionary), method='importance', unigram=unigram)
 	else:
 		criterion = nn.CrossEntropyLoss()
-
-	xe = nn.CrossEntropyLoss()
 
 	# Training
 	print('Training...')
@@ -127,8 +128,13 @@ def train(args):
 				# Forward pass
 				logits = model(x)
 				loss = criterion(logits, y)
+
+				### Debugging softmax approximation.
+				# xe = nn.CrossEntropyLoss()
 				# loss_ = xe(logits, y)
-				# print(loss.item(), loss_.item())
+				# print('approx {:>3.2f}, true {:>3.2f}, diff {:>3.4f}'.format(
+				# 	loss.item(), loss_.item(), loss_.item() - loss.item()))
+				###
 
 				# Update parameters
 				optimizer.zero_grad()

@@ -38,7 +38,7 @@ class ApproximateLoss:
             self.importance = np.ones(vocab_size) / vocab_size
 
     def __call__(self, logits, targets):
-        """Compute negative log likelihood with approximate log-normalizer."""
+        """Compute negative log likelihood loss with approximated log-normalizer."""
         target_logits = logits[torch.arange(logits.size(0)), targets]  # [batch]
         log_partition = self._approximate_log_partition(logits, targets, target_logits)  # [batch]
         target_log_probs = target_logits - log_partition  # [batch]

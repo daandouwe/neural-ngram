@@ -57,18 +57,19 @@ class ApproximateLoss:
                 torch.cat((positive_approx.unsqueeze(1), negative_approx.unsqueeze(1)), dim=1), dim=1)  # [batch, num_samples + 1]
         return log_partition
 
-    def scale(self, unigram, temp):
+    def scale(self, probs, temp):
         assert 0 <= temp <= 1, temp
-        unigram = unigram**temp
-        unigram /= unigram.sum()
-        return unigram
+        probs = probs**temp
+        probs /= probs.sum()
+        return probs
 
     def sample(self, targets, cython=False, correct=False):
         def mask(probs, id):
             """Zero out probs that should not be sampled."""
             probs = np.copy(probs)
             probs[id] = 0  # zero out
-            return probs / probs.sum()  # renormalize
+            probs /= probs.sum()  # renormalize
+            return probs
 
         if correct:
             samples = self._correct_samples(

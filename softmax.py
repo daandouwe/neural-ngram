@@ -51,7 +51,8 @@ class ApproximateLoss:
             importance_probs = torch.from_numpy(self.importance[idx.numpy()]).float()  # [batch, num_samples]
             log_importance_weights = -1 * (
                 torch.log(importance_probs) + torch.log(torch.tensor(float(self.num_samples))))  # [batch, num_samples]
-            negative_approx = torch.logsumexp(log_importance_weights + sampled_logits, dim=1)
+            negative_approx = torch.logsumexp(
+                log_importance_weights + sampled_logits, dim=1)
             positive_approx = torch.logsumexp(target_logits, dim=0) * torch.ones(target_logits.shape)  # [batch]
             log_partition = torch.logsumexp(
                 torch.cat((positive_approx.unsqueeze(1), negative_approx.unsqueeze(1)), dim=1), dim=1)  # [batch, num_samples + 1]
@@ -59,8 +60,8 @@ class ApproximateLoss:
 
     def scale(self, probs, temp):
         assert 0 <= temp <= 1, temp
-        probs = probs**temp
-        probs /= probs.sum()
+        probs = probs**temp  # scale
+        probs /= probs.sum()  # renormalize
         return probs
 
     def sample(self, targets, cython=False, correct=False):

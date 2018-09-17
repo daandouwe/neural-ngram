@@ -100,7 +100,7 @@ def train(args):
 	optimizer = torch.optim.Adam(parameters, lr=args.lr)
 	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
 	if args.softmax_approx:
-		if False:
+		if args.unigram_proposal:
 			unigram = normalize(Counter(corpus.train.numpy()))
 			unigram = np.array([unigram[i] for i in range(len(unigram))])
 		else:
@@ -231,6 +231,8 @@ if __name__ == '__main__':
 						help='number of epochs')
 	parser.add_argument('--softmax-approx', action='store_true',
 						help='use softmax approximation (complementary sum sampling)')
+	parser.add_argument('--unigram-proposal', action='store_true',
+						help='use unigram proposal distribution in softmax approx')
 	parser.add_argument('--seed', type=int, default=42,
 						help='random seed')
 	parser.add_argument('--print-every', type=int, default=1000,

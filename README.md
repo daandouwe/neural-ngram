@@ -25,8 +25,8 @@ If you have pretrained GloVe vectors, you can use those:
 
 Some other data arguments are:
 ```bash
---lower       # Lowercase all words in training data.
---no-header   # Remove all headers such as `=== History ===`.
+--lower        # Lowercase all words in training data.
+--no-headers   # Remove all headers such as `=== History ===`.
 ```
 
 ## Speed and perplexity

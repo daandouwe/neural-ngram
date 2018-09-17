@@ -16,7 +16,7 @@ from model import NeuralNgram
 from generate import generate
 from plot import plot
 from softmax import ApproximateLoss
-from utils import print_args, write_losses, list_hidden_dims, model_data_checks, normalize
+from utils import print_args, write_losses, list_hidden_dims, model_data_checks, normalize, clock_time
 
 
 def batchify(data, batch_size):
@@ -147,9 +147,11 @@ def train(args):
 				if step % args.print_every == 0:
 					avg_loss = sum(losses[-args.print_every:]) / args.print_every
 					t1 = time.time()
-					print('| epoch {} | step {}/{} | loss {:.3f} | ngrams/sec {:.1f}'.format(
+					steps_per_second = args.print_every / (t1 - t0)
+					print('| epoch {} | step {}/{} | loss {:.3f} | ngrams/sec {:.1f} | eta {}h{}m{}s'.format(
 						epoch, step, num_steps, avg_loss,
-						args.print_every * args.batch_size / (t1-t0)))
+						steps_per_second * args.batch_size,
+						*clock_time((num_steps - step) / steps_per_second)))
 					t0 = time.time()
 
 				if step % args.save_every == 0:
@@ -229,6 +231,8 @@ if __name__ == '__main__':
 						help='learning rate for optimizer')
 	parser.add_argument('--epochs', type=int, default=10,
 						help='number of epochs')
+	parser.add_argument('--dropout', type=float, default=0.0,
+						help='dropout (embedding and mlp)')
 	parser.add_argument('--softmax-approx', action='store_true',
 						help='use softmax approximation (complementary sum sampling)')
 	parser.add_argument('--unigram-proposal', action='store_true',

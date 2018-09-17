@@ -16,7 +16,7 @@ def xavier_init(layer):
 
 class NeuralNgram(nn.Module):
     """Bengio neural ngram language model."""
-    def __init__(self, order, emb_dim, vocab_size, hidden_dims=(200,), use_glove=False):
+    def __init__(self, order, emb_dim, vocab_size, hidden_dims=(200,), use_glove=False, dropout=0.0):
         """
         Args:
             order (int): the order of the language model, i.e. length of the history
@@ -29,23 +29,25 @@ class NeuralNgram(nn.Module):
         self.emb_dim = emb_dim
         self.hidden_dims = hidden_dims
         self.vocab_size = vocab_size
+        self.dropout = nn.Dropout(p=dropout)
         self.embedding = nn.Embedding(vocab_size, emb_dim)
         self.mlp = MLP(
             in_dim=order*emb_dim,
             hidden_dims=hidden_dims,
             activation='Tanh',
-            dropout=0.)
+            dropout=dropout)
         self.decoder = nn.Linear(hidden_dims[-1], vocab_size)
+        self.init_weights()
 
     def init_weights(self):
-        for param in self.parameters:
-            if param.requires_grad:
-                xavier_init(param)
+        for param in self.parameters():
+            if len(param.shape) >= 2 and param.requires_grad:
+                nn.init.xavier_uniform_(param)
 
     def load_glove(self, glove_dir, i2w):
         words = [i2w[i] for i in range(len(i2w))]
         logpath = os.path.join('log', 'glove.error.txt')
-        # Log all words that had no glove vector.
+        # Log all words that had no glove vector (for later reference).
         with open(logpath, 'w') as f:
             embeddings = load_glove(words, self.emb_dim, glove_dir, logfile=f)
             self.embedding.weight.data = embeddings
@@ -58,8 +60,8 @@ class NeuralNgram(nn.Module):
 
     def forward(self, indices):
         x = self.embedding(indices)
-        # Concatenate along embedding dimension.
-        x = x.view(indices.size(0), -1)
+        x = x.view(indices.size(0), -1)  # Concatenate along embedding dimension.
+        x = self.dropout(x)
         hidden = self.mlp(x)
         logits = self.decoder(hidden)
         return logits

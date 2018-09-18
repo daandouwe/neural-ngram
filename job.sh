@@ -2,7 +2,7 @@
 
 #PBS -S /bin/bash
 #PBS -lnodes=1
-#PBS -lwalltime=03:00:00
+#PBS -lwalltime=00:14:00
 #PBS -qgpu
 
 module load eb
@@ -11,24 +11,29 @@ module load CUDA/9.0.176
 module load cuDNN/7.0.5-CUDA-9.0.176
 
 set -x # echo on
+
+# ID=$PBS_JOBID
+ID=123
 SRCDIR=$HOME/neural-ngram
 DATADIR=$HOME/data/wikitext/wikitext-2
-TMP=$TMPDIR/daansdir2
+TMP=$TMPDIR/daansdir/$ID
+LOGDIR=$TMP/log
+MODELSDIR=$TMP/models
 
 # Copy training data to scratch
-cp -r $DATADIR $TMP
-
-mkdir -p $TMP/log
-mkdir -p $TMP/models
-
+mkdir -p $TMP $MODELSDIR $LOGDIR
+cp $DATADIR/* $TMP
 ls -l $TMP
 
 python $SRCDIR/main.py train \
-    --data-dir $TMP --save-dir $TMP/models --log-dir $TMP/log \
-    --order 13 --emb-dim 100 --hidden-dims 800,100 --tied \
-    --epochs 30 --batch-size 32 --lr 1e-3
+    --data-dir $TMP --save-dir $MODELSDIR --log-dir $LOGDIR --no-headers \
+    --order 13 --emb-dim 100 --hidden-dims 500 \
+    --epochs 10 --batch-size 512 --lr 1e-3 --dropout 0.5
+    # --resume --checkpoint models/123/wiki.best.pt
 
 # Copy output directory from scratch to home
-# cp -r $TMPDIR/log $SRCDIR/log
-# cp -r $TMPDIR/models $SRCDIR/models
-cp -r $TMPDIR $SRCDIR
+mkdir $SRCDIR/log/$ID
+mkdir $SRCDIR/models/$ID
+
+cp -r $LOGDIR/* $SRCDIR/log/$ID
+cp -r $MODELSDIR/* $SRCDIR/models/$ID

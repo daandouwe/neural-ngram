@@ -99,8 +99,7 @@ def train(args):
 			model.cuda()
 
 	parameters = [param for param in model.parameters() if param.requires_grad]
-	optimizer = torch.optim.Adam(parameters, lr=args.lr)
-	scheduler = ReduceLROnPlateau(optimizer, threshold=1e-4, patience=1, factor=.5, verbose=True)
+	optimizer = torch.optim.SGD(parameters, lr=args.lr)
 	if args.softmax_approx:
 		if args.unigram_proposal:
 			unigram = normalize(Counter(corpus.train.numpy()))
@@ -115,10 +114,14 @@ def train(args):
 	# Training
 	print('Training...')
 	losses = dict(train=[], val=[])
-	num_steps = train_data.size(0) - args.order - 1
+
+	lr = args.lr
 	best_val_loss = None
-	t0 = time.time()
+
+	num_steps = train_data.size(0) - args.order - 1
 	batch_order = np.arange(num_steps)
+
+	t0 = time.time()
 	try:
 		for epoch in range(1, args.epochs+1):
 			model.train()
@@ -151,10 +154,11 @@ def train(args):
 					avg_loss = sum(losses['train'][-args.print_every:]) / args.print_every
 					t1 = time.time()
 					steps_per_second = args.print_every / (t1 - t0)
-					print('| epoch {} | step {}/{} | loss {:.3f} | ngrams/sec {:.1f} | eta {}h{}m{}s'.format(
-						epoch, step, num_steps, avg_loss,
-						steps_per_second * args.batch_size,
-						*clock_time((num_steps - step) / steps_per_second)))
+					print('| epoch {} | step {}/{} | loss {:.3f} | lr {:.3f} | '
+							'ngrams/sec {:.1f} | eta {}h{}m{}s'.format(
+								epoch, step, num_steps, avg_loss, lr,
+								steps_per_second * args.batch_size,
+								*clock_time((num_steps - step) / steps_per_second)))
 					t0 = time.time()
 
 				if step % args.save_every == 0:
@@ -175,9 +179,10 @@ def train(args):
 				with open(modelpath, 'wb') as f:
 					torch.save(model, f)
 				best_val_loss = val_loss
-
-			scheduler.step(val_loss)
-
+			else:
+			 	# Anneal the learning rate if no improvement has been seen in the validation dataset.
+				lr /= 4.0
+				optimizer = torch.optim.SGD(parameters, lr=lr)
 	except KeyboardInterrupt:
 		print('-' * 89)
 		print('Exiting from training early')
@@ -233,8 +238,8 @@ if __name__ == '__main__':
 	# Training args
 	parser.add_argument('--batch-size', type=int, default=32,
 						help='size of the minibatch')
-	parser.add_argument('--lr', type=float, default=1e-3,
-						help='learning rate for optimizer')
+	parser.add_argument('--lr', type=float, default=1.0,
+						help='initial learning rate for optimizer')
 	parser.add_argument('--epochs', type=int, default=10,
 						help='number of epochs')
 	parser.add_argument('--dropout', type=float, default=0.0,

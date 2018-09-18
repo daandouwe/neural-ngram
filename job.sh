@@ -2,7 +2,7 @@
 
 #PBS -S /bin/bash
 #PBS -lnodes=1
-#PBS -lwalltime=00:14:00
+#PBS -lwalltime=00:30:00
 #PBS -qgpu
 
 module load eb
@@ -12,8 +12,8 @@ module load cuDNN/7.0.5-CUDA-9.0.176
 
 set -x # echo on
 
-# ID=$PBS_JOBID
-ID=123
+ID=$PBS_JOBID
+# ID=123
 SRCDIR=$HOME/neural-ngram
 DATADIR=$HOME/data/wikitext/wikitext-2
 TMP=$TMPDIR/daansdir/$ID
@@ -28,8 +28,7 @@ ls -l $TMP
 python $SRCDIR/main.py train \
     --data-dir $TMP --save-dir $MODELSDIR --log-dir $LOGDIR --no-headers \
     --order 13 --emb-dim 100 --hidden-dims 500 \
-    --epochs 10 --batch-size 512 --lr 1e-3 --dropout 0.5
-    # --resume --checkpoint models/123/wiki.best.pt
+    --epochs 20 --batch-size 512 --dropout 0.5
 
 # Copy output directory from scratch to home
 mkdir $SRCDIR/log/$ID

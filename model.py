@@ -15,7 +15,7 @@ def xavier_init(layer):
 
 
 class NeuralNgram(nn.Module):
-    """Bengio neural ngram language model."""
+    """Neural ngram language model."""
     def __init__(self, order, emb_dim, vocab_size, hidden_dims=(200,), use_glove=False, dropout=0.0):
         """
         Args:

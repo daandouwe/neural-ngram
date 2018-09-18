@@ -36,13 +36,14 @@ def get_batch(data, i, order):
 
 
 def evaluate(data, model, criterion):
+	model.eval()
 	total_loss = 0
 	n_steps = data.size(0) - model.order - 1
 	for i in tqdm(range(n_steps)):
 		x, y = get_batch(data, i, model.order)
 		out = model(x)
 		loss = criterion(out, y)
-		total_loss += loss.data[0]
+		total_loss += loss.data.item()
 	return total_loss / n_steps
 
 
@@ -86,7 +87,8 @@ def train(args):
 			order=args.order,
 			emb_dim=args.emb_dim,
 			vocab_size=corpus.vocab_size,
-			hidden_dims=hidden_dims)
+			hidden_dims=hidden_dims,
+			dropout=args.dropout)
 		if args.use_glove:
 			print('Loading GloVe vectors...')
 			model.load_glove(args.glove_dir, i2w=corpus.dictionary.i2w)
@@ -112,13 +114,14 @@ def train(args):
 
 	# Training
 	print('Training...')
-	losses = []
+	losses = dict(train=[], val=[])
 	num_steps = train_data.size(0) - args.order - 1
 	best_val_loss = None
 	t0 = time.time()
 	batch_order = np.arange(num_steps)
 	try:
 		for epoch in range(1, args.epochs+1):
+			model.train()
 			epoch_start_time = time.time()
 			np.random.shuffle(batch_order)
 			for step in range(1, num_steps+1):
@@ -142,10 +145,10 @@ def train(args):
 				optimizer.step()
 
 				# Save loss.
-				losses.append(loss.cpu().item())
+				losses['train'].append(loss.cpu().item())
 
 				if step % args.print_every == 0:
-					avg_loss = sum(losses[-args.print_every:]) / args.print_every
+					avg_loss = sum(losses['train'][-args.print_every:]) / args.print_every
 					t1 = time.time()
 					steps_per_second = args.print_every / (t1 - t0)
 					print('| epoch {} | step {}/{} | loss {:.3f} | ngrams/sec {:.1f} | eta {}h{}m{}s'.format(
@@ -161,6 +164,7 @@ def train(args):
 
 			print('Evaluating on validation set...')
 			val_loss = evaluate(val_data, model, criterion)
+			losses['val'].append(val_loss)
 			print('-' * 89)
 			print('| end of epoch {:3d} | time {:5.2f}s | valid loss {:5.2f} | valid ppl {:8.2f}'.format(
 				epoch, (time.time() - epoch_start_time), val_loss, np.exp(val_loss)))
@@ -178,7 +182,9 @@ def train(args):
 		print('-' * 89)
 		print('Exiting from training early')
 
-	write_losses(losses, args.log_dir)
+	write_losses(losses['train'], args.log_dir, name='train-losses')
+	write_losses(losses['val'], args.log_dir, name='val-losses')
+
 	print('Evaluating on test set...')
 	test_loss = evaluate(test_data, model, criterion)
 	print('=' * 89)
@@ -256,7 +262,7 @@ if __name__ == '__main__':
 	parser.add_argument('--num-samples', type=int, default='1000',
 	                    help='number of words to generate')
 	parser.add_argument('--temperature', type=float, default=1.0,
-	                    help='temperature - higher will increase diversity')
+	                    help='temperature - higher will increase sample diversity')
 	parser.add_argument('--no-unk', action='store_true',
 						help='avoid generating unk')
 	parser.add_argument('--no-sos', action='store_true',

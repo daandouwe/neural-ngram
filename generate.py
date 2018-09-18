@@ -8,6 +8,8 @@ from utils import UNK, SOS, EOS, UNK_CHAR, SOS_CHAR, EOS_CHAR, model_data_checks
 
 
 def generate(args):
+    cuda = torch.cuda.is_available()
+
     # Set the random seed manually for reproducibility.
     torch.manual_seed(args.seed)
 
@@ -40,7 +42,7 @@ def generate(args):
     input = [word if word in corpus.dictionary.w2i else unk for word in input]
     ids = [corpus.dictionary.w2i[word] for word in input]
     input = Variable(torch.LongTensor(ids).unsqueeze(0))
-
+    input = input.cuda() if cuda else input
 
     glue = '' if args.use_chars else ' '
     with open(args.outf, 'w') as outf:
@@ -57,6 +59,7 @@ def generate(args):
 
             ids.append(word_idx)
             input = Variable(torch.LongTensor(ids[-model.order:]).unsqueeze(0))
+            input = input.cuda() if cuda else input
             if word is sos and args.no_sos:
                 continue
             elif word is eos:
@@ -66,3 +69,5 @@ def generate(args):
 
             if i % 100 == 0:
                 print('| Generated {}/{} words'.format(i, args.num_samples))
+
+    print(f'Results saved in `{args.outf}`.')

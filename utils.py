@@ -15,6 +15,7 @@ def clock_time(s):
     m, s = divmod(s, 60)
     return int(h), int(m), int(s)
 
+
 def write_losses(losses, logdir, name='losses'):
 	name = name + '.csv' if not name.endswith('.csv') else name
 	logpath = os.path.join(logdir, name)

@@ -33,20 +33,20 @@ Some other data arguments are:
 With the following arguments one epoch takes around 45 minutes:
 ```bash
 ./main.py train --name wiki --order 5 --use-glove --emb-dim 50 --hidden-dims 100 \
-    --batch-size 128 --epochs 10  # Test perplexity 224.89
+    --batch-size 128 --epochs 10   # Test perplexity 224.89
 ```
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-small-model.png)
 
 We can explore the limits:
 ```bash
 ./main.py train --name wiki --order 13 --emb-dim 100 --hidden-dims 500 \
-    --batch-size 512 --epochs 40  # Test perplexity 153.12
+    --epochs 40 --batch-size 512 --dropout 0.5   # Test perplexity 153.12
 ```
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-medium-model.png)
 
 ```bash
 ./main.py train --name wiki --order 13 --emb-dim 300 --hidden-dims 1400 \
-    --batch-size 256 --epochs 40  # Test perplexity 152.64
+    --epochs 40 --batch-size 256 --dropout 0.65   # Test perplexity 152.64
 ```
 ![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-big-model.png)
 

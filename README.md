@@ -32,14 +32,24 @@ Some other data arguments are:
 ## Speed and perplexity
 With the following arguments one epoch takes around 45 minutes:
 ```bash
-./main.py train --name wiki --use-glove --emb-dim 50 --hidden-dims 100 \
+./main.py train --name wiki --order 5 --use-glove --emb-dim 50 --hidden-dims 100 \
     --batch-size 128 --epochs 10  # Test perplexity 224.89
 ```
-The loss is acting kinda funny though:
+![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-small-model.png)
 
-![loss](https://github.com/daandouwe/neural-ngram/blob/master/log/losses.png)
+We can explore the limits:
+```bash
+./main.py train --name wiki --order 13 --emb-dim 100 --hidden-dims 500 \
+    --batch-size 512 --epochs 40  # Test perplexity 153.12
+```
+![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-medium-model.png)
 
-Is there some strange dependency, e.g. in the optimizer?
+```bash
+./main.py train --name wiki --order 13 --emb-dim 300 --hidden-dims 1400 \
+    --batch-size 256 --epochs 40  # Test perplexity 152.64
+```
+![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-medium-model.png)
+
 
 ## Generate text
 To generate text, use:

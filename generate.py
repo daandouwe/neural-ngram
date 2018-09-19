@@ -17,7 +17,11 @@ def generate(args):
         parser.error("--temperature has to be greater or equal 1e-3")
 
     with open(args.checkpoint, 'rb') as f:
-        model = torch.load(f)
+        try:
+            model = torch.load(f)
+        except:
+            # Convert the model to CPU if the model is serialized on GPU.
+            model = torch.load(f, map_location='cpu')
     model.eval()
 
     sos = SOS_CHAR if args.use_chars else SOS

@@ -23,7 +23,11 @@ def plot(args):
 
     # Load model.
     with open(args.checkpoint, 'rb') as f:
-        model = torch.load(f)
+        try:
+            model = torch.load(f)
+        except:
+            # Convert the model to CPU if the model is serialized on GPU.
+            model = torch.load(f, map_location='cpu')
     model.eval()
     embeddings = model.embedding.weight.data
 
@@ -82,10 +86,12 @@ def emb_scatter(data, names, model_name, perplexity=30.0, k=20):
     colormap = d3['Category20'][k]
     colors = [colormap[i] for i in klabels]
 
-    source = ColumnDataSource(data=dict(x1=emb_tsne[:,0],
-                                        x2=emb_tsne[:,1],
-                                        names=names,
-                                        colors=colors))
+    source = ColumnDataSource(
+        data=dict(
+            x1=emb_tsne[:,0],
+            x2=emb_tsne[:,1],
+            names=names,
+            colors=colors))
 
     fig.scatter(x='x1', y='x2', size=8, source=source, color='colors')
 

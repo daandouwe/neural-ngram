@@ -2,7 +2,7 @@
 
 #PBS -S /bin/bash
 #PBS -lnodes=1
-#PBS -lwalltime=00:30:00
+#PBS -lwalltime=02:30:00
 #PBS -qgpu
 
 module load eb
@@ -27,8 +27,8 @@ ls -l $TMP
 
 python $SRCDIR/main.py train \
     --data-dir $TMP --save-dir $MODELSDIR --log-dir $LOGDIR --no-headers \
-    --order 13 --emb-dim 100 --hidden-dims 500 \
-    --epochs 20 --batch-size 512 --dropout 0.5
+    --order 13 --emb-dim 300 --hidden-dims 1400 \
+    --epochs 40 --batch-size 256 --dropout 0.65
 
 # Copy output directory from scratch to home
 mkdir $SRCDIR/log/$ID

@@ -180,7 +180,7 @@ def train(args):
 					torch.save(model, f)
 				best_val_loss = val_loss
 			else:
-			 	# Anneal the learning rate if no improvement has been seen in the validation dataset.
+				# Anneal the learning rate if no improvement has been seen in the validation dataset.
 				lr /= 4.0
 				optimizer = torch.optim.SGD(parameters, lr=lr)
 	except KeyboardInterrupt:
@@ -259,15 +259,15 @@ if __name__ == '__main__':
 
 	# Generation args
 	parser.add_argument('--checkpoint', type=str, default='models/wiki.latest.pt',
-	                    help='model checkpoint to use')
+						help='model checkpoint to use')
 	parser.add_argument('--outf', type=str, default='generated.txt',
-	                    help='output file for generated text')
+						help='output file for generated text')
 	parser.add_argument('--start', default=None,
-	                    help='start of generated text')
+						help='start of generated text')
 	parser.add_argument('--num-samples', type=int, default='1000',
-	                    help='number of words to generate')
+						help='number of words to generate')
 	parser.add_argument('--temperature', type=float, default=1.0,
-	                    help='temperature - higher will increase sample diversity')
+						help='temperature - higher will increase sample diversity')
 	parser.add_argument('--no-unk', action='store_true',
 						help='avoid generating unk')
 	parser.add_argument('--no-sos', action='store_true',

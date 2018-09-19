@@ -154,7 +154,7 @@ def train(args):
 					avg_loss = sum(losses['train'][-args.print_every:]) / args.print_every
 					t1 = time.time()
 					steps_per_second = args.print_every / (t1 - t0)
-					print('| epoch {} | step {}/{} | loss {:.3f} | lr {:.3f} | '
+					print('| epoch {} | step {}/{} | loss {:.4f} | lr {:.3f} | '
 							'ngrams/sec {:.1f} | eta {}h{}m{}s'.format(
 								epoch, step, num_steps, avg_loss, lr,
 								steps_per_second * args.batch_size,

@@ -7,13 +7,6 @@ import torch.nn as nn
 from glove import load_glove
 
 
-def xavier_init(layer):
-    """Xavier initialization of a layer."""
-    fan_out, fan_in = layer.weight.size()
-    initrange = (2.0 / (fan_in + fan_out))**0.5
-    layer.weight.data.uniform_(-initrange, initrange)
-
-
 class NeuralNgram(nn.Module):
     """Neural ngram language model."""
     def __init__(self, order, emb_dim, vocab_size, hidden_dims=(200,), use_glove=False, dropout=0.0):

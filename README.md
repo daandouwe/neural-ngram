@@ -48,7 +48,7 @@ We can explore the limits:
 ./main.py train --name wiki --order 13 --emb-dim 300 --hidden-dims 1400 \
     --batch-size 256 --epochs 40  # Test perplexity 152.64
 ```
-![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-medium-model.png)
+![loss](https://github.com/daandouwe/neural-ngram/blob/master/plots/losses-big-model.png)
 
 
 ## Generate text

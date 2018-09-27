@@ -43,7 +43,7 @@ def evaluate(data, model, criterion):
 		x, y = get_batch(data, i, model.order)
 		out = model(x)
 		loss = criterion(out, y)
-		total_loss += loss.data.item()
+		total_loss += loss.data.data[0]
 	return total_loss / n_steps
 
 
@@ -140,7 +140,7 @@ def train(args):
 					xe = nn.CrossEntropyLoss()
 					true_loss = xe(logits, y)
 					print('approx {:>3.2f}, true {:>3.2f}, diff {:>3.4f}'.format(
-						loss.item(), true_loss.item(), true_loss.item() - loss.item()))
+						loss.data[0], true_loss.data[0], true_loss.data[0] - loss.data[0]))
 
 				# Update parameters
 				optimizer.zero_grad()
@@ -148,7 +148,7 @@ def train(args):
 				optimizer.step()
 
 				# Save loss.
-				losses['train'].append(loss.cpu().item())
+				losses['train'].append(loss.cpu().data[0])
 
 				if step % args.print_every == 0:
 					avg_loss = sum(losses['train'][-args.print_every:]) / args.print_every

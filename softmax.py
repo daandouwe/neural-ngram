@@ -39,10 +39,15 @@ class ApproximateLoss:
 
     def __call__(self, logits, targets):
         """Compute negative log likelihood loss with approximated log-normalizer."""
-        target_logits = logits[torch.arange(logits.size(0)), targets]  # [batch]
-        log_partition = self._approximate_log_partition(logits, targets, target_logits)  # [batch]
-        target_log_probs = target_logits - log_partition  # [batch]
-        return -1 * target_log_probs.mean(dim=0)  # NLL loss [1]
+        if False:
+            # This one does not work.
+            target_logits = logits[torch.arange(logits.size(0)), targets]  # [batch]
+            log_partition = self._approximate_log_partition(logits, targets, target_logits)  # [batch]
+            target_log_probs = target_logits - log_partition  # [batch]
+            return -1 * target_log_probs.mean(dim=0)  # NLL loss [1]
+        else:
+            # But this one does.
+            return self._css(logits, targets)
 
     def _approximate_log_partition(self, logits, targets, target_logits):
         with torch.no_grad():
@@ -65,6 +70,19 @@ class ApproximateLoss:
         return probs
 
     def sample(self, targets, correct=False, cython=False):
+        if correct:
+            # `Clean` method as described in Botev et al. 2017.
+            samples = self._correct_samples(
+                probs=self.importance,
+                targets=targets.data.numpy())
+        else:
+            samples = self._masked_samples(
+                probs=self.importance,
+                targets=targets.data.numpy(),
+                cython=cython)
+        return torch.from_numpy(samples).to(self.device)
+
+    def _masked_samples(self, probs, targets, cython=False):
         def mask(probs, id):
             """Zero out probs that should not be sampled."""
             probs = np.copy(probs)
@@ -72,25 +90,22 @@ class ApproximateLoss:
             probs /= probs.sum()  # renormalize
             return probs
 
-        if correct:
-            # `Clean` method as described in Botev et al. 2017.
-            samples = self._correct_samples(
-                probs=self.importance,
-                targets=targets.data.numpy())
-        elif cython:
-            # Fast sampling using a custom cython implementation.
-            samples = _sample.sample(
-                probs=mask(self.importance, targets.data.numpy()),  # `dirty` method by masking
-                num_samples=self.num_samples)
-            samples = np.tile(samples, (targets.size(0), 1))
-        else:
-            # Standard numpy random.
-            samples = np.random.choice(
-                np.arange(self.vocab_size),
-                size=self.num_samples,
-                p=mask(self.importance, targets.data.numpy()))  # `dirty` method by masking
-            samples = np.tile(samples, (targets.size(0), 1))
-        return torch.from_numpy(samples).to(self.device)
+        """Sampling by masking undesired samples."""
+        batch_size = targets.shape[0]
+        samples = np.zeros((batch_size, self.num_samples), np.int64)
+        for i in range(batch_size):
+            if cython:
+                # Faster(?) sampling using a custom cython implementation.
+                samples[i] = _sample.sample(
+                    probs=mask(self.importance, targets[i]),
+                    num_samples=self.num_samples)
+            else:
+                # Regular numpy random sampling.
+                samples[i] = np.random.choice(
+                    np.arange(self.vocab_size),
+                    size=self.num_samples,
+                    p=mask(self.importance, targets[i]))  # `dirty` method by masking
+        return samples
 
     def _correct_samples(self, probs, targets, num_extra=100):
         """The sampling method exactly as described in Botev et al. 2017."""
@@ -110,7 +125,43 @@ class ApproximateLoss:
             np.arange(self.vocab_size),
             size=num_extra,
             p=self.importance)
-        out_samples = np.zeros((targets.shape[0], self.num_samples), np.int64)
-        for i in range(targets.shape[0]):
+        batch_size = targets.shape[0]
+        out_samples = np.zeros((batch_size, self.num_samples), np.int64)
+        for i in range(batch_size):
             out_samples[i] = filter_correct_class(targets[i], samples, extra)
         return out_samples
+
+    def _css(self, logits, targets):
+        """
+        Computes the negative log-likelihood with a CSS approximate of the Softmax.
+        Args:
+            logits(torch.FloatTensor): [B x V]
+            targets(torch.LongTensor): [B]
+        Returns:
+            torch.FloatTensor: negative log-likelihood. [B]
+        Author:
+            Tom Pelsmaeker https://github.com/0Gemini0 (edited by Daan van Stigt)
+        """
+        # Obtain the positive and negative set, both parts of the normalizer
+        positive_set = targets.unique()
+        neg_dim = self.vocab_size - positive_set.shape[0]
+        weights = np.ones(self.vocab_size) / neg_dim
+        weights[positive_set] = 0
+        negative_set = torch.tensor(np.random.choice(self.vocab_size, self.num_samples,
+                                                     replace=False, p=weights)).to(self.device)
+
+        # Extract the logits of the normalizer, normalizing the negative set in the process
+        log_kappa = torch.log(torch.tensor(neg_dim / self.num_samples, device=self.device))
+        logits[:, negative_set] += log_kappa
+        normalizer = logits[:, torch.cat((positive_set, negative_set))]
+
+        # The softmax stabilizer
+        u = torch.max(normalizer, dim=1)[0]
+
+        # Compute the log of stable exponentials. We also need to shift the logits.
+        log_normalizer = torch.log(torch.exp(normalizer - u.unsqueeze(1)).sum(dim=1))
+        log_logits = torch.log(torch.exp(torch.gather(logits, 1, targets.unsqueeze(1)) - u.unsqueeze(1))).squeeze(1)
+
+        # We return the negative log likelihood
+        logprobs = log_logits - log_normalizer
+        return -1 * logprobs.mean(dim=0)

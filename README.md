@@ -90,4 +90,4 @@ tqdm
 - [X] Text generation by sampling.
 - [X] Plot embeddings with t-SNE
 - [ ] Perplexity for user input.
-- [ ] Softmax approximation.
+- [X] Softmax approximation.

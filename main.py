@@ -135,12 +135,12 @@ def train(args):
 				logits = model(x)
 				loss = criterion(logits, y)
 
-				### Debugging softmax approximation.
-				# xe = nn.CrossEntropyLoss()
-				# loss_ = xe(logits, y)
-				# print('approx {:>3.2f}, true {:>3.2f}, diff {:>3.4f}'.format(
-				# 	loss.item(), loss_.item(), loss_.item() - loss.item()))
-				###
+				if args.debug:
+					# Debugging softmax approximation.
+					xe = nn.CrossEntropyLoss()
+					true_loss = xe(logits, y)
+					print('approx {:>3.2f}, true {:>3.2f}, diff {:>3.4f}'.format(
+						loss.item(), true_loss.item(), true_loss.item() - loss.item()))
 
 				# Update parameters
 				optimizer.zero_grad()
@@ -202,6 +202,9 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument('mode', choices=['train', 'generate', 'plot'])
+
+    # Debug mode.
+	parser.add_argument('-d', '--debug', action='store_true')
 
 	# Dir args
 	parser.add_argument('--data-dir', type=str, default='data/wikitext-2',

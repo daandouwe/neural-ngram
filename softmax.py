@@ -1,6 +1,6 @@
 """
 Softmax approximation with Complementary Sum Sampling.
-Follows http://web4.cs.ucl.ac.uk/staff/D.Barber/publications/AISTATS2017.pdf.
+Follows Botev et al. 2017 (http://web4.cs.ucl.ac.uk/staff/D.Barber/publications/AISTATS2017.pdf).
 """
 import argparse
 import os
@@ -64,7 +64,7 @@ class ApproximateLoss:
         probs /= probs.sum()  # renormalize
         return probs
 
-    def sample(self, targets, cython=False, correct=False):
+    def sample(self, targets, correct=False, cython=False):
         def mask(probs, id):
             """Zero out probs that should not be sampled."""
             probs = np.copy(probs)
@@ -73,27 +73,32 @@ class ApproximateLoss:
             return probs
 
         if correct:
+            # `Clean` method as described in Botev et al. 2017.
             samples = self._correct_samples(
                 probs=self.importance,
                 targets=targets.data.numpy())
         elif cython:
+            # Fast sampling using a custom cython implementation.
             samples = _sample.sample(
-                probs=mask(self.importance, targets.data.numpy()),
+                probs=mask(self.importance, targets.data.numpy()),  # `dirty` method by masking
                 num_samples=self.num_samples)
             samples = np.tile(samples, (targets.size(0), 1))
         else:
+            # Standard numpy random.
             samples = np.random.choice(
                 np.arange(self.vocab_size),
                 size=self.num_samples,
-                p=mask(self.importance, targets.data.numpy()))
+                p=mask(self.importance, targets.data.numpy()))  # `dirty` method by masking
             samples = np.tile(samples, (targets.size(0), 1))
         return torch.from_numpy(samples).to(self.device)
 
     def _correct_samples(self, probs, targets, num_extra=100):
+        """The sampling method exactly as described in Botev et al. 2017."""
         def filter_correct_class(target, samples, extra):
             """Collect first `num_samples` that are not equal to target."""
             all_samples = np.concatenate((samples, extra))
             filtered = np.array([sample for sample in all_samples if sample != target])[:self.num_samples]
+            # Can end up with too few samples, a very annoying downside of this method.
             assert len(filtered) == self.num_samples, len(filtered)
             return filtered
 
